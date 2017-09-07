@@ -3,7 +3,7 @@
 2) ```cd EEG/frequency_detector```
 3) Create a virtual environment by running:
 ```virtualenv flask```
-4) ```source active flask/bin/activate```
+4) ```source flask/bin/activate```
 5) ```pip install -r requirements.txt```
 6) ```python app.py```
 7) Navigate to localhost:5000 in your browse
