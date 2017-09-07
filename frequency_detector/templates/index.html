@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Frequency Identification</title>
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='move_objects.js') }}"></script>
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function() {
+            // Connect to the Socket.IO server.
+            // The connection URL has the following format:
+            //     http[s]://<domain>:<port>[/<namespace>]
+            var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+            // Event handler for server sent data.
+            // The callback function is invoked whenever the server emits data
+            // to the client. The data is then displayed in the "Received"
+            // section of the page.
+            socket.on('my_message', function(msg) {
+                // update the received data on the page real time
+                $('#log').text(msg.data).html();
+                // call the function to move the cats
+                moveSelection(msg.data);
+            });
+            // Interval function that tests message latency by sending a "ping"
+            // message. The server then responds with a "pong" message and the
+            // round trip time is measured.
+            var ping_pong_times = [];
+            var start_time;
+            window.setInterval(function() {
+                start_time = (new Date).getTime();
+                socket.emit('my_ping');
+            }, 1000);
+            // Handler for the "pong" message. When the pong is received, the
+            // time from the ping is stored, and the average of the last 30
+            // samples is average and displayed.
+            socket.on('my_pong', function() {
+                var latency = (new Date).getTime() - start_time;
+                ping_pong_times.push(latency);
+                ping_pong_times = ping_pong_times.slice(-30); // keep last 30 samples
+                var sum = 0;
+                for (var i = 0; i < ping_pong_times.length; i++)
+                    sum += ping_pong_times[i];
+                // display this on the screen and update it real time
+                $('#ping-pong').text(Math.round(10 * sum / ping_pong_times.length) / 10);
+            });
+            // Handlers for the different buttons on the page.
+            // These accept clicks from the user and send it to the server to start streaming audio
+            $('#stop_button').click(function() {
+                // when user clicks stop, update the status message
+                $('#message').text("Status: Stream stopped").html()
+                // notify the server to stop the audio stream
+                socket.emit('stop_event', {data: "stop"});
+            });
+            $('#start_button').click(function() {
+                // when user clicks start, update the status message
+                $('#message').text("Status: Stream started").html()
+                // notify the server to start the stream
+                socket.emit('start_event', {data: "start"});
+            });
+        });
+    </script>
+</head>
+<body >
+    <h1>Frequency Detector</h1>
+    <p>Async mode is: <b>{{ async_mode }}</b></p>
+    <p>Average ping/pong latency: <b><span id="ping-pong"></span>ms</b></p>
+    <!-- <h2>Audio Stream:</h2>
+    <input type="button" value="Start" id="start_button" />
+    <input type="button" value="Stop" id="stop_button" />
+    <p id="message">Status: Stream stopped </p> -->
+    <div id="container", style="overflow: hidden;width: 100%;">
+        <div id="left-col" style="float: left; width: 50%; padding-bottom: 500em; margin-bottom: -500em;">
+            <h2>Audio Stream:</h2>
+            <input type="button" value="Start" id="start_button" />
+            <input type="button" value="Stop" id="stop_button" />
+            <p id="message">Status: Stream stopped </p>
+        </div>
+        <div id="right-col" style="float: left;width: 50%;margin-right: -1px; padding-bottom: 500em;margin-bottom: -500em;">
+          <h2>Movement Legend:</h2>
+          <p id="legend"> 300&lt;freq&lt;350 hz: up, <br>350&lt;freq&lt;400 hz: down,<br>400&lt;freq&lt;450 hz: left,<br>450&lt;freq&lt;500 hz: right</p>
+        </div>
+    </div>
+    <!-- <h2>Movement Legend:</h2>
+    <p id="legend"> 300&lt;freq&lt;350: up, <br>350&lt;freq&lt;400: down,<br>400&lt;freq&lt;450: left,<br>450&lt;freq&lt;500: right</p> -->
+    <h2>Received:</h2>
+    <div id="log"></div>
+    <img id="image1" src="{{ url_for('static', filename='assets/IMG_0826.JPG') }}" style="position:absolute;top:400px;left:500px" >
+</body>
+</html>
