@@ -1,6 +1,6 @@
 ### Basic Instructions for running this app locally:
-1) ```git clone this repo```
-2) ```cd this repo```
+1) ```git clone https://github.com/ToddMorrill/EEG.git```
+2) ```cd EEG/frequency_detector```
 3) Create a virtual environment by running:
 ```virtualenv flask```
 4) ```source active flask/bin/activate```
